@@ -1,14 +1,107 @@
 <!doctype html>
 <html lang="en">
   <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Hello world project</title>
-  </head>
+    <script type="module">import { injectIntoGlobalHook } from "/@react-refresh";
+injectIntoGlobalHook(window);
+window.$RefreshReg$ = () => {};
+window.$RefreshSig$ = () => (type) => type;</script>
 
+    <script type="module" src="/@vite/client"></script>
+
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/placeholder.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Atharv Garg - Web Developer Portfolio</title>
+    <meta
+      name="description"
+      content="Web Developer passionate about creating meaningful digital experiences through clean code and innovative solutions."
+    />
+  </head>
   <body>
     <div id="root"></div>
-
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
+<script>
+                window.addEventListener('message', (event) => {
+                  const { data } = event;
+                  if (!data?.type) {
+                    return;
+                  }
+
+                  switch (data.type) {
+                    case 'builder.evaluate': {
+                      const text = data.data.text;
+                      const args = data.data.arguments || [];
+                      const id = data.data.id;
+                      // tslint:disable-next-line:no-function-constructor-with-string-args
+                      const fn = new Function(text);
+                      let result;
+                      let error = null;
+                      try {
+                        // eslint-disable-next-line prefer-spread
+                        result = fn.apply(null, args);
+                      } catch (err) {
+                        error = err;
+                      }
+
+                      if (error) {
+                        window.parent?.postMessage(
+                          {
+                            type: 'builder.evaluateError',
+                            data: { id, error: error.message },
+                          },
+                          '*'
+                        );
+                      } else {
+                        if (result && typeof result.then === 'function') {
+                          result
+                            .then((finalResult) => {
+                              window.parent?.postMessage(
+                                {
+                                  type: 'builder.evaluateResult',
+                                  data: { id, result: finalResult },
+                                },
+                                '*'
+                              );
+                            })
+                            .catch(console.error);
+                        } else {
+                          window.parent?.postMessage(
+                            {
+                              type: 'builder.evaluateResult',
+                              data: { result, id },
+                            },
+                            '*'
+                          );
+                        }
+                      }
+                      break;
+                    }
+                  }
+                });
+
+                window.addEventListener('error', (event) => {
+                  window.parent?.postMessage(
+                    {
+                      type: 'builder.interactiveFrameError',
+                      data: { message: event.error?.stack || event.error?.message || event.message },
+                    },
+                    '*'
+                  );
+                });
+                
+                setTimeout(() => {
+                  const viteError = document.querySelector('vite-error-overlay')?.shadowRoot?.textContent;
+                  if (typeof viteError === 'string') {
+                    window.parent?.postMessage(
+                      {
+                        type: 'builder.interactiveFrameError',
+                        data: { message: viteError },
+                      },
+                      '*'
+                    );
+                  }
+                }, 500);
+
+              </script>
